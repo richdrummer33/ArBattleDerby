@@ -5,20 +5,57 @@ using UnityEngine;
 public class CarMotorController : MonoBehaviour
 {
     public List<WheelCollider> wheels = new List<WheelCollider>();
+    public List<WheelCollider> rearWheels = new List<WheelCollider>();
 
-    bool kbDrive = false;
+    public bool kbDrive = false;
 
     Vector3 positionStart;
     Quaternion rotStart;
 
     bool resetting;
 
-    int ct = 0;
+    Rigidbody rb;
 
+    Coroutine crt;
+
+    int ct = 0;
+           
     void Start()
     {
         positionStart = transform.position;
         rotStart = transform.rotation;
+        rb = transform.root.GetComponent<Rigidbody>();
+    }
+
+    void FixedUpdate()
+    {
+        WheelHit hit;
+
+        bool hitL = wheels[0].GetGroundHit(out hit);
+        bool hitR = wheels[1].GetGroundHit(out hit);
+        bool hitLb = rearWheels[0].GetGroundHit(out hit);
+        bool hitRb = rearWheels[1].GetGroundHit(out hit);
+
+        if ((hitL && hitR && hitLb && hitRb) && crt != null)
+        {
+            StopCoroutine(crt);
+            resetting = false;
+        }
+        else if (!hitL && !hitR && !resetting)
+        {
+            ct++;
+
+            if (ct > 60)
+            {
+                crt = StartCoroutine(Reset());
+                ct = 0;
+            }
+        }
+
+        if (kbDrive)
+        {
+            KbDrive();
+        }
     }
 
     private IEnumerator Reset()
@@ -33,79 +70,36 @@ public class CarMotorController : MonoBehaviour
         resetting = false;
     }
 
-    void FixedUpdate()
-    {
-        WheelHit hit;
-
-        bool hitL = wheels[0].GetGroundHit(out hit);
-        bool hitR = wheels[1].GetGroundHit(out hit);
-
-        if (!hitL && !hitR && !resetting)
-        {
-            ct++;
-
-            if (ct > 60)
-            {
-                StartCoroutine(Reset());
-                ct = 0;
-            }
-        }
-
-
-        if (kbDrive)
-        {
-            float torque = 0f;
-            float steer = 0f;
-
-            if (Input.GetKey(KeyCode.W))
-            {
-                torque = 30f;
-            }
-            else if (Input.GetKey(KeyCode.S))
-            {
-                torque = -30f;
-            }
-
-            if (Input.GetKey(KeyCode.A))
-            {
-                steer = -45f;
-            }
-            else if (Input.GetKey(KeyCode.D))
-            {
-                steer = 45f;
-            }
-
-            foreach (WheelCollider wheel in wheels)
-            {
-                if (Input.GetKey(KeyCode.LeftShift))
-                {
-                    torque *= 1.5f;
-                }
-                wheel.motorTorque = torque;
-                wheel.steerAngle = steer;
-            }
-        }
-    }
-
+    #region Movement
 
     public void SteerLeft()
     {
+        if (resetting)
+        {
+            rb.AddTorque(100000f * transform.forward);
+            //rb.AddForce(100000f * Vector3.Cross(Vector3.up, transform.forward));
+        }
         foreach (WheelCollider wheel in wheels)
         {
             wheel.motorTorque = 35f;
             wheel.steerAngle = -45f;
             Debug.Log("steering L now");
-        }
+        }        
     }
 
     public void SteerRight()
     {
+        if (resetting)
+        {
+            rb.AddTorque(100000f * -transform.forward);
+            //rb.AddForce(100000f * -Vector3.Cross(Vector3.up, transform.forward));
+        }
         foreach (WheelCollider wheel in wheels)
         {
             wheel.motorTorque = 35f;
             wheel.steerAngle = 45f;
             Debug.Log("steering R now");
-        }
+        }        
     }
 
     public void SteerStraight()
@@ -113,7 +107,21 @@ public class CarMotorController : MonoBehaviour
         foreach (WheelCollider wheel in wheels)
         {
             wheel.motorTorque = 45f;
+            Debug.Log("straight");
+        }        
+    }
+
+    public void SteerBackwards()
+    {
+        if (resetting)
+        {
+            rb.AddForce(100f * transform.forward, ForceMode.Impulse);
         }
+        foreach (WheelCollider wheel in wheels)
+        {
+            wheel.motorTorque = -45f;
+        }
+
     }
 
     public void StopCar()
@@ -126,5 +134,36 @@ public class CarMotorController : MonoBehaviour
         }
     }
 
+    #endregion
 
+    #region Keyboard
+
+    private void KbDrive()
+    {
+        float torque = 0f;
+        float steer = 0f;
+
+
+        if (Input.GetKey(KeyCode.A)) // Left/Right
+        {
+            SteerLeft();
+        }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            SteerRight();
+        }
+
+        else if (Input.GetKey(KeyCode.W)) // Fwd/Back
+        {
+            SteerStraight();
+        }
+        else if (Input.GetKey(KeyCode.S))
+        {
+            SteerBackwards();
+        }
+        else
+            StopCar();
+    }
+
+    #endregion
 }

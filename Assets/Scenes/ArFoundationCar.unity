@@ -541,6 +541,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   raycastManager: {fileID: 5275377819223793953}
   carPrefab: {fileID: 55, guid: 74c247cdfb3058f44b4c3a19797ec6e3, type: 3}
+  enemyPrefab: {fileID: 252185233196809164, guid: 8c12ef30c0ec1c7469dcb4f9c4e634f3,
+    type: 3}
+  planeManager: {fileID: 5275377819223793956}
 --- !u!4 &5275377819223793959
 Transform:
   m_ObjectHideFlags: 0
