@@ -262,7 +262,7 @@ public class CarMotorController : MonoBehaviour
         }
     }
 
-    public void MakeBoom()
+    public void MakeBoom(float boomForceModifier)
     {
         foreach (GameObject en in enemyCars)
         {
@@ -277,15 +277,7 @@ public class CarMotorController : MonoBehaviour
         rb.AddForce(Random.insideUnitSphere * Random.Range(0.75f, 1.25f) * 500f, ForceMode.Impulse);
         rb.AddTorque(Random.insideUnitSphere * Random.Range(0.75f, 1.25f) * 500f, ForceMode.Impulse);
 
-        boomForceModifier = 1f;
-
         boomForceSource.Play();        
-    }
-
-    float boomForceModifier = 1f;
-    public void ChargeBoom()
-    {
-        boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime * 0.25f, 0f, 2.5f);
     }
 
     #endregion

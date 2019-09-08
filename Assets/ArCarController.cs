@@ -45,6 +45,8 @@ public class ArCarController : MonoBehaviour
 
     public static ArCarController instance;
 
+    bool touched;
+
     void OnEnable()
     {
         planeManager.planesChanged += OnPlaneAdded;
@@ -87,7 +89,7 @@ public class ArCarController : MonoBehaviour
             List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
             raycastManager.Raycast(screenCenter, hits, UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon);
-
+                       
             if (Input.touchCount == 1) // Touching screen
             {
                 if (hits.Count > 0)
@@ -110,16 +112,16 @@ public class ArCarController : MonoBehaviour
 
                     if (touch.position.x < Screen.width / 3f)
                     {
-                        if (touch.position.y > Screen.height * (1f / 8f))
+                        if (touch.position.y > Screen.height * (1f / 8f) && touch.position.y < Screen.height * 0.55f)
                             motor.SteerLeft();
-                        else
+                        else if (touch.position.y < Screen.height * (1f / 8f))
                             motor.SteerLeftBackward();
                     }
                     else if (touch.position.x > Screen.width * (2f / 3f))
                     {
-                        if(touch.position.y > Screen.height * (1f / 8f))
+                        if(touch.position.y > Screen.height * (1f / 8f) && touch.position.y < Screen.height * 0.55f)
                             motor.SteerRight();
-                        else
+                        else if (touch.position.y < Screen.height * (1f / 8f))
                             motor.SteerRightBackward();
                     }
                     else if (touch.position.y > Screen.height * (1f / 8f))
@@ -129,23 +131,12 @@ public class ArCarController : MonoBehaviour
                     else
                     {
                         motor.SteerBackwards();
-                    }
-
-                    if(boomPanelAnim.GetBool("Boom Charged"))
-                    {
-                        if(touch.position.x > Screen.width * (2f / 3f) && touch.position.y > Screen.height * 0.55f)
-                        {
-                            boomPanelAnim.SetTrigger("Make Boom");
-                            boomChargeSlider.value = 0f;
-                            motor.MakeBoom();
-                            boomChargeSlider.GetComponent<Animator>().SetBool("Boom Charged", false);
-                        }
-                    }
+                    }                   
                 }
             }
             else if (Input.touchCount > 1 && motor != null)
             { 
-                motor.SteerStraight(false);
+                motor.SteerStraight(false);               
             }
             else if (motor)
             {
@@ -157,8 +148,42 @@ public class ArCarController : MonoBehaviour
                 currentEnemy = SpawnEnemy();
                 enCt++;
             }
+
+            #region Boom Control
+
+            if (Input.touchCount > 0)
+            {
+                touched = true;
+                foreach (Touch touch in Input.touches)
+                {
+                    if (boomPanelAnim.GetBool("Boom Charged"))
+                    {
+                        if (touch.position.x > Screen.width * (2f / 3f) && touch.position.y > Screen.height * 0.55f)
+                        {
+                            ChargeBoom();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                touched = false;
+            }
+
+            if (boomForceModifier > 1f && !touched)
+            {
+                boomPanelAnim.SetTrigger("Make Boom");
+                boomChargeSlider.GetComponent<Animator>().speed = 1f;
+                boomChargeSlider.GetComponent<Animator>().SetBool("Boom Charged", false);
+                boomChargeSlider.value = 0f;
+                motor.MakeBoom(boomForceModifier);
+                boomForceModifier = 1f;
+            }
         }
+
+        #endregion
     }
+
 
     private GameObject SpawnEnemy()
     {
@@ -275,8 +300,11 @@ public class ArCarController : MonoBehaviour
 
         if (boomChargeSlider.value > 0.99f)
         {
-            boomChargeSlider.GetComponent<Animator>().SetTrigger("Animate");
-            boomPanel.GetComponent<Animator>().SetBool("Boom Charged", true);
+            if (!boomPanel.GetComponent<Animator>().GetBool("Boom Charged"))
+            {
+                boomChargeSlider.GetComponent<Animator>().SetTrigger("Animate");
+                boomPanel.GetComponent<Animator>().SetBool("Boom Charged", true);
+            }
         }
         else
         {
@@ -288,7 +316,7 @@ public class ArCarController : MonoBehaviour
     {
         if (boomChargeSlider.value < 0.99f)
         {
-            boomForceModifier = 0f;
+            boomForceModifier = 1f;
             boomChargeSlider.value = Mathf.Clamp(boomChargeSlider.value - Time.deltaTime * 0.66f, 0f, 1f);
         }
     }
@@ -296,9 +324,9 @@ public class ArCarController : MonoBehaviour
     float boomForceModifier = 1f;
     public void ChargeBoom() // Hold fiunger down to charge extra power
     {
-        boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime * 0.33f, 0f, 2.5f);
+        boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime, 1.33f, 4f);
 
-        if (boomForceModifier > 2.49f)
-            boomChargeSlider.GetComponent<Animator>().SetBool("Boom Charged", true);
+        boomChargeSlider.GetComponent<Animator>().SetBool("Boom Charged", true);
+        boomChargeSlider.GetComponent<Animator>().speed = boomForceModifier / 4f;
     }
 }
