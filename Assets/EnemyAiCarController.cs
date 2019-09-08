@@ -5,10 +5,11 @@ using UnityEngine;
 public class EnemyAiCarController : MonoBehaviour
 {
     public List<WheelCollider> wheels = new List<WheelCollider>();
-    public List<Transform> boundarySensors;
+    public List<Transform> boundarySensorsFront;
+    public List<Transform> boundarySensorsBack;
 
     [SerializeField]
-    bool boundarySafe = true;
+    bool backSafe = true;
 
     public float driveTorque = 35f;
     float origTorque;
@@ -37,7 +38,7 @@ public class EnemyAiCarController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {        
-        if (other.tag == "Player" && Random.Range(0f,1f) > 0.66f)
+        if ((other.tag == "Player" || other.tag == "Enemy") && Random.Range(0f,1f) > 0.66f)
         {
             StartCoroutine(CollideBehavior());
         }
@@ -61,7 +62,7 @@ public class EnemyAiCarController : MonoBehaviour
             }
             if (collisionTimer > 2f)
             {
-                driveTorque = origTorque * 1.5f;
+                driveTorque = origTorque * 1.75f;
             }
         }
     }
@@ -76,16 +77,14 @@ public class EnemyAiCarController : MonoBehaviour
     void FixedUpdate()
     {
         #region Drive
-
-        SenseBoundary();
-
+        
         float torque = 0f;
         float steerAngle = 0f;
 
         Vector3 fromToPlayer = playerTransform.position - transform.position;
         crossVert = Vector3.Cross(transform.forward.normalized, fromToPlayer.normalized).y;
-
-        if (colliding)
+      
+        if (colliding && SenseBoundary(boundarySensorsBack))
         {
             torque = -driveTorque;
             steerAngle = collideSteer;
@@ -177,6 +176,8 @@ public class EnemyAiCarController : MonoBehaviour
             Destroy(t.gameObject, 2.5f);
             t.parent = null;
         }
+
+        ArCarController.instance.EnemyDeath();
     }
 
     private IEnumerator CollideBehavior()
@@ -202,17 +203,18 @@ public class EnemyAiCarController : MonoBehaviour
         return children;
     }
 
-    void SenseBoundary()
+    bool SenseBoundary(List<Transform> boundarySensors)
     {
-        RaycastHit hit;
-        boundarySafe = true;
-
         foreach (Transform t in boundarySensors)
         {
             if(!Physics.Raycast(t.position, -t.up, 100f))
             {
-                boundarySafe = false;
+                backSafe = false;
+                return false;                
             }
         }
+
+        backSafe = true;
+        return true;
     }
 }
