@@ -23,7 +23,6 @@ public class ArCarControllerAdvanced : MonoBehaviour
 
         if (Input.touchCount > 0) // Touching screen
         {
-            Debug.Log("Touch held");
 
             if (hits.Count > 0)
             {
@@ -42,12 +41,10 @@ public class ArCarControllerAdvanced : MonoBehaviour
                 if (touch.position.x < Screen.width / 3f)
                 {
                     motor.SteerLeft();
-                    Debug.Log("Car steer L");
                 }
                 else if (touch.position.x > Screen.width * (2f / 3f))
                 {
                     motor.SteerRight();
-                    Debug.Log("Car steer R");
                 }
                 else
                 {
@@ -58,7 +55,6 @@ public class ArCarControllerAdvanced : MonoBehaviour
         else if (Input.touchCount > 1 && motor != null)
         {
             motor.SteerStraight();
-            Debug.Log("Car steer Straint");
         }
         else if (motor)
         {

@@ -9,6 +9,9 @@ public class CarMotorController : MonoBehaviour
 
     public bool kbDrive = false;
 
+    public float driveTorque = 35f;
+    float origTorque;
+
     Vector3 positionStart;
     Quaternion rotStart;
 
@@ -25,6 +28,23 @@ public class CarMotorController : MonoBehaviour
         positionStart = transform.position;
         rotStart = transform.rotation;
         rb = transform.root.GetComponent<Rigidbody>();
+        origTorque = driveTorque;
+    }
+
+    void OnCollisionEnter(Collision col)
+    {
+        if(col.gameObject.tag == "Enemy")
+        {
+            driveTorque = origTorque * 1.5f;
+        }
+    }
+
+    void OnCollisionExit(Collision col)
+    {
+        if (col.gameObject.tag == "Enemy")
+        {
+            driveTorque = origTorque;
+        }
     }
 
     void FixedUpdate()
@@ -64,6 +84,7 @@ public class CarMotorController : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
+        rb.velocity = Vector3.zero;
         transform.position = positionStart;
         transform.rotation = rotStart;
 
@@ -81,9 +102,8 @@ public class CarMotorController : MonoBehaviour
         }
         foreach (WheelCollider wheel in wheels)
         {
-            wheel.motorTorque = 35f;
+            wheel.motorTorque = driveTorque;
             wheel.steerAngle = -45f;
-            Debug.Log("steering L now");
         }        
     }
 
@@ -96,9 +116,8 @@ public class CarMotorController : MonoBehaviour
         }
         foreach (WheelCollider wheel in wheels)
         {
-            wheel.motorTorque = 35f;
+            wheel.motorTorque = driveTorque;
             wheel.steerAngle = 45f;
-            Debug.Log("steering R now");
         }        
     }
 
@@ -106,8 +125,8 @@ public class CarMotorController : MonoBehaviour
     {
         foreach (WheelCollider wheel in wheels)
         {
-            wheel.motorTorque = 45f;
-            Debug.Log("straight");
+            wheel.motorTorque = driveTorque * 45f / 35f;
+            wheel.steerAngle = 0f;
         }        
     }
 
@@ -130,7 +149,6 @@ public class CarMotorController : MonoBehaviour
         {
             wheel.motorTorque = 0f;
             wheel.steerAngle = 0f;
-            Debug.Log("steering R now");
         }
     }
 

@@ -12,15 +12,31 @@ public class ArCarController : MonoBehaviour
 
     public GameObject enemyPrefab;
 
+    public GameObject debugMarksd;
+
     GameObject currentEnemy;
 
     private GameObject currentCar;
 
     public ARPlaneManager planeManager;
 
+    Vector3 enemySpawn;
+
+    ARPlane spawnPlane;
+
     CarMotorController motor;
 
     List<ARPlane> allPlanes = new List<ARPlane>();
+
+    void OnEnable()
+    {
+        planeManager.planesChanged += OnPlaneAdded;
+    }
+
+    void OnDisable()
+    {
+        planeManager.planesChanged -= OnPlaneAdded;
+    }
 
     void Update()
     {
@@ -29,17 +45,19 @@ public class ArCarController : MonoBehaviour
         List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
         raycastManager.Raycast(screenCenter, hits, UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon);
-        
+
         if (Input.touchCount > 0) // Touching screen
         {
-            Debug.Log("Touch held");
-
             if (hits.Count > 0)
             {
                 if (currentCar == null)
                 {
                     currentCar = Instantiate(carPrefab, hits[0].pose.position, Quaternion.identity);
                     motor = currentCar.GetComponent<CarMotorController>();
+
+                    planeManager.trackables.TryGetTrackable(hits[0].trackableId, out spawnPlane);
+                    StartCoroutine(RandomSpawnGenerator());
+
                     Debug.Log("Car placed");
                 }
             }
@@ -51,12 +69,10 @@ public class ArCarController : MonoBehaviour
                 if (touch.position.x < Screen.width / 3f)
                 {
                     motor.SteerLeft();
-                    Debug.Log("Car steer L");
                 }
                 else if (touch.position.x > Screen.width * (2f / 3f))
                 {
                     motor.SteerRight();
-                    Debug.Log("Car steer R");
                 }
                 else
                 {
@@ -67,8 +83,7 @@ public class ArCarController : MonoBehaviour
         else if (Input.touchCount > 1 && motor != null)
         {
             motor.SteerStraight();
-            Debug.Log("Car steer Straint");
-        }        
+        }
         else if (motor)
         {
             motor.StopCar();
@@ -84,17 +99,9 @@ public class ArCarController : MonoBehaviour
     {
         Debug.Log("Attempt Spawn");
 
-        int spawnPlaneIndex = Mathf.RoundToInt(Random.Range(0, allPlanes.Count - 1));
+        Vector3 spawnPos = enemySpawn;
 
-        ARPlane spawnPlane = allPlanes[spawnPlaneIndex];
-
-        List<Vector3> planeVerts = spawnPlane.GetComponent<MeshCollider>().sharedMesh.vertices.ToList<Vector3>();
-
-        int vertIndex = Mathf.RoundToInt(Random.Range(0, planeVerts.Count - 1));
-
-        Vector3 innerDirection = spawnPlane.center - planeVerts[vertIndex]; // Vector that points from the extremity to the center of the plane
-
-        Vector3 spawnPos = planeVerts[vertIndex] + innerDirection.normalized * 0.05f; // Spawn 5cm inside of the plane
+        Vector3 innerDirection = spawnPlane.center - spawnPos; // Vector that points from the extremity to the center of the plane
 
         Quaternion spawnRot = Quaternion.Euler(innerDirection);
 
@@ -103,6 +110,25 @@ public class ArCarController : MonoBehaviour
         currentEnemy.GetComponent<EnemyAiCarController>().Init(currentCar.transform);
 
         Debug.Log("Spawned!!!");
+    }
+
+    private IEnumerator RandomSpawnGenerator()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(2f);
+
+            Vector2 screenCenter = Camera.current.ViewportToScreenPoint(new Vector3(0.5f, 0.5f));
+
+            List<ARRaycastHit> hits = new List<ARRaycastHit>();
+
+            raycastManager.Raycast(screenCenter, hits, UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon);
+
+            if (hits.Count > 0)
+            {
+                enemySpawn = hits[0].pose.position;
+            }
+        }
     }
 
     void OnPlaneAdded(ARPlanesChangedEventArgs eventArgs)
