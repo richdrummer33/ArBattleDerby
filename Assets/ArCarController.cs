@@ -17,11 +17,16 @@ public class ArCarController : MonoBehaviour
     public Text frLifeCt;
     public Text enDeathCount;
     public Text gameOver;
+    public Slider boomChargeSlider;
+
+    public GameObject boomPanel;
+    Animator boomPanelAnim;
+    List<GameObject> allEnemyCars = new List<GameObject>();
 
     GameObject currentEnemy;
 
     int enCt;
-    int enDeaths;
+    public int enDeaths;
     bool gameOverStatus;
     
     public int playerLives = 5;
@@ -45,7 +50,10 @@ public class ArCarController : MonoBehaviour
         planeManager.planesChanged += OnPlaneAdded;
         instance = this;
         frLifeCt.text = "Lives Remaining: " + playerLives;
-        enDeathCount.text = "Enemys Destroyed: " + enDeaths;
+        enDeathCount.text = "Enemies Destroyed: " + enDeaths;
+        boomChargeSlider.value = 0f;
+        boomPanel.GetComponent<Animator>().SetBool("Boom Charged", false);
+        boomPanelAnim = boomPanel.GetComponent<Animator>();
     }
 
     void OnDisable()
@@ -55,10 +63,20 @@ public class ArCarController : MonoBehaviour
 
     void Update()
     {
+        enDeathCount.text = "Enemies Destroyed: " + enDeaths + " ct " + allEnemyCars.Count;
+
+        if (!ScoreTracker.instance)
+            Debug.Log("NO TRACKEr");
+
         if (playerLives == 0)
         {
             if (!gameOverStatus)
             {
+                if (ScoreTracker.instance != null)
+                    gameOver.gameObject.GetComponentInChildren<Text>().text = "Game Over!" + "\r\n" + "Your Score: " + ScoreTracker.instance.GetScore() + "\r\n" + "High Score: " + ScoreTracker.instance.GetHighScore();
+                else
+                    Debug.LogError("No score tracker!");
+
                 StartCoroutine(GameOver());
             }
         }
@@ -106,17 +124,28 @@ public class ArCarController : MonoBehaviour
                     }
                     else if (touch.position.y > Screen.height * (1f / 8f))
                     {
-                        motor.SteerStraight();
+                        motor.SteerStraight(true);
                     }
                     else
                     {
                         motor.SteerBackwards();
                     }
+
+                    if(boomPanelAnim.GetBool("Boom Charged"))
+                    {
+                        if(touch.position.x > Screen.width * (2f / 3f) && touch.position.y > Screen.height * 0.55f)
+                        {
+                            boomPanelAnim.SetTrigger("Make Boom");
+                            boomChargeSlider.value = 0f;
+                            motor.MakeBoom();
+                            boomChargeSlider.GetComponent<Animator>().SetBool("Boom Charged", false);
+                        }
+                    }
                 }
             }
             else if (Input.touchCount > 1 && motor != null)
-            {
-                motor.SteerStraight();
+            { 
+                motor.SteerStraight(false);
             }
             else if (motor)
             {
@@ -126,6 +155,7 @@ public class ArCarController : MonoBehaviour
             if (!currentEnemy && allPlanes.Count > 0 && currentCar && enemySpawn != Vector3.zero)
             {
                 currentEnemy = SpawnEnemy();
+                enCt++;
             }
         }
     }
@@ -148,22 +178,25 @@ public class ArCarController : MonoBehaviour
 
         Debug.Log("Spawned!!!");
 
-        enCt++;
+        allEnemyCars.Add(newEnemy);
 
         return newEnemy;
     }
 
+    
     private IEnumerator RandomSpawnGenerator()
-    {
+    { 
         while (true)
         {
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.1f);
 
-            Vector2 screenCenter = Camera.current.ViewportToScreenPoint(new Vector3(Random.Range(0.25f, 0.75f), Random.Range(0.25f, 0.75f)));
+            Ray ray = new Ray(Camera.current.transform.position, Random.insideUnitSphere);
+
+            //Vector2 screenCenter = Camera.current.ViewportToScreenPoint(new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f)));
 
             List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
-            raycastManager.Raycast(screenCenter, hits, UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon);
+            raycastManager.Raycast(ray, hits, UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon);
 
             if (hits.Count > 0)
             {
@@ -181,14 +214,15 @@ public class ArCarController : MonoBehaviour
         }
     }
 
-    public void EnemyDeath()
+    public void EnemyDeath(GameObject deadCar)
     {
-        StartCoroutine(SpawnDelayed());
-
         enDeaths++;
-        enCt = Mathf.RoundToInt(Mathf.Clamp(enCt - 1, 0f, Mathf.Infinity));
+        enCt--; // = Mathf.RoundToInt(Mathf.Clamp(enCt - 1, 0f, Mathf.Infinity));
+        allEnemyCars.Remove(deadCar);
 
-        enDeathCount.text = "Enemys Destroyed: " + enDeaths + " ct " + enCt;
+        StartCoroutine(SpawnDelayed());
+        
+        //enDeathCount.text = "Enemies Destroyed: " + enDeaths + " ct " + enCt;
         enDeathCount.GetComponent<Animator>().SetTrigger("Increment");
     }
 
@@ -202,17 +236,23 @@ public class ArCarController : MonoBehaviour
 
     private IEnumerator SpawnDelayed()
     {
-        yield return new WaitForSeconds(enCt * 2f);
+        if (allEnemyCars.Count < Mathf.RoundToInt((float)enDeaths / 2f) && allEnemyCars.Count < 3f) // (enDeaths % 3f == 0 && enCt < 3)
+        {
+            yield return new WaitForSeconds(allEnemyCars.Count * 2f);
 
-        if (enDeaths % 3f == 0 && enCt < 3) // (enCt < Mathf.RoundToInt((float) enDeaths / 2f) && enCt < 3f)
-            SpawnEnemy();
+            if (allEnemyCars.Count < 3)
+            {
+                SpawnEnemy();
+                enCt++;
+            }
+        }
     }
 
     private IEnumerator GameOver()
     {
         gameOverStatus = true;
         gameOver.gameObject.SetActive(true);
-        gameOver.gameObject.GetComponent<Animator>().SetBool("Game Over", true);
+        gameOver.gameObject.GetComponent<Animator>().SetBool("Game Over", true);          
 
         yield return new WaitForSeconds(5f);
         
@@ -227,5 +267,38 @@ public class ArCarController : MonoBehaviour
         */
 
         SceneManager.LoadScene(0);
+    }
+
+    public void ChargeTheBoom()
+    {
+        boomChargeSlider.value = Mathf.Clamp(boomChargeSlider.value + Time.deltaTime * 0.33f, 0f, 1f);
+
+        if (boomChargeSlider.value > 0.99f)
+        {
+            boomChargeSlider.GetComponent<Animator>().SetTrigger("Animate");
+            boomPanel.GetComponent<Animator>().SetBool("Boom Charged", true);
+        }
+        else
+        {
+            boomPanel.GetComponent<Animator>().SetBool("Boom Charged", false);
+        }
+    }
+
+    public void DrainTheBoom()
+    {
+        if (boomChargeSlider.value < 0.99f)
+        {
+            boomForceModifier = 0f;
+            boomChargeSlider.value = Mathf.Clamp(boomChargeSlider.value - Time.deltaTime * 0.66f, 0f, 1f);
+        }
+    }
+
+    float boomForceModifier = 1f;
+    public void ChargeBoom() // Hold fiunger down to charge extra power
+    {
+        boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime * 0.33f, 0f, 2.5f);
+
+        if (boomForceModifier > 2.49f)
+            boomChargeSlider.GetComponent<Animator>().SetBool("Boom Charged", true);
     }
 }

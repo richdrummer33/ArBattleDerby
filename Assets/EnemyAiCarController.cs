@@ -30,6 +30,7 @@ public class EnemyAiCarController : MonoBehaviour
     void Start()
     {
         origTorque = driveTorque;
+        StartCoroutine(SpawnInvincibility());
     }
 
     public void Init(Transform playerTransform)
@@ -134,7 +135,7 @@ public class EnemyAiCarController : MonoBehaviour
             }
         }
 
-        if (!isTouching) // All wheels off the ground (flipped)
+        if (!isTouching && !cantDie) // All wheels off the ground (flipped)
         {
             if(!dying)
                 dieCrt = StartCoroutine(Die(2f));
@@ -150,15 +151,22 @@ public class EnemyAiCarController : MonoBehaviour
         #endregion
     }
     //
-
+    bool cantDie;
+    private IEnumerator SpawnInvincibility()
+    {
+        cantDie = true;
+        yield return new WaitForSeconds(2f);
+        cantDie = false;
+    }
 
     private IEnumerator Die(float delay)
     {
-
         Debug.Log("Enemy Dying crt started");
         dying = true;
-
+        
         yield return new WaitForSeconds(delay);
+
+        ArCarController.instance.EnemyDeath(this.gameObject);
 
         List<Transform> allChildren = GetAllChildren(transform);
 
@@ -176,12 +184,10 @@ public class EnemyAiCarController : MonoBehaviour
             }
 
             chRb.AddForce(Random.insideUnitSphere * 0.5f, ForceMode.Impulse);
-
+            
             Destroy(t.gameObject, 2.5f);
             t.parent = null;
         }
-
-        ArCarController.instance.EnemyDeath();
     }
 
     private IEnumerator CollideBehavior()

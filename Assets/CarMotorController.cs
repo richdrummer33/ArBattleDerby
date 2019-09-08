@@ -13,10 +13,17 @@ public class CarMotorController : MonoBehaviour
 
     public GameObject ExplodyBitsPrefab;
 
+    [SerializeField]
+    List<GameObject> enemyCars = new List<GameObject>();
+
     public float driveTorque = 35f;
     float origTorque;
 
     bool bumped;
+    bool forced;
+
+    public AudioSource boomForceSource;
+    float boomCharge;
 
     Vector3 positionStart;
     Quaternion rotStart;
@@ -117,6 +124,18 @@ public class CarMotorController : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        if(enemyCars.Count > 1)
+        {
+            ArCarController.instance.ChargeTheBoom();
+        }
+        else
+        {
+            ArCarController.instance.DrainTheBoom();
+        }
+    }
+
     private IEnumerator Reset()
     {
         resetting = true;
@@ -208,9 +227,9 @@ public class CarMotorController : MonoBehaviour
         }
     }
 
-    public void SteerStraight()
+    public void SteerStraight(bool flip)
     {
-        if (resetting && !bumped)
+        if (resetting && !bumped && flip)
         {
             StartCoroutine(Bump());
         }
@@ -243,6 +262,32 @@ public class CarMotorController : MonoBehaviour
         }
     }
 
+    public void MakeBoom()
+    {
+        foreach (GameObject en in enemyCars)
+        {
+            Rigidbody enRb = en.GetComponent<Rigidbody>();
+
+            Vector3 dir = (en.transform.position - transform.position).normalized + Vector3.up;
+
+            enRb.AddForce(dir * Random.Range(0.75f, 1.25f) * 2500f * boomForceModifier, ForceMode.Impulse);
+            enRb.AddTorque(Random.insideUnitSphere * Random.Range(0.75f, 1.25f) * 3500f * boomForceModifier, ForceMode.Impulse);
+        }
+
+        rb.AddForce(Random.insideUnitSphere * Random.Range(0.75f, 1.25f) * 500f, ForceMode.Impulse);
+        rb.AddTorque(Random.insideUnitSphere * Random.Range(0.75f, 1.25f) * 500f, ForceMode.Impulse);
+
+        boomForceModifier = 1f;
+
+        boomForceSource.Play();        
+    }
+
+    float boomForceModifier = 1f;
+    public void ChargeBoom()
+    {
+        boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime * 0.25f, 0f, 2.5f);
+    }
+
     #endregion
 
     #region Keyboard
@@ -264,7 +309,7 @@ public class CarMotorController : MonoBehaviour
 
         else if (Input.GetKey(KeyCode.W)) // Fwd/Back
         {
-            SteerStraight();
+            SteerStraight(true);
         }
         else if (Input.GetKey(KeyCode.S))
         {
@@ -272,6 +317,12 @@ public class CarMotorController : MonoBehaviour
         }
         else
             StopCar();
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            if (!forced)
+                StartCoroutine(ForceSurroundingEnemies());
+        }
     }
 
     #endregion
@@ -286,6 +337,53 @@ public class CarMotorController : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         bumped = false;
+    }
+
+    private IEnumerator ForceSurroundingEnemies()
+    {
+        if (enemyCars.Count > 0)
+        {
+            forced = true;
+            boomCharge = 0f;
+
+            foreach (GameObject en in enemyCars)
+            {
+                Rigidbody enRb = en.GetComponent<Rigidbody>();
+
+                Vector3 dir = (en.transform.position - transform.position).normalized + Vector3.up;
+
+                enRb.AddForce(dir * Random.Range(0.75f, 1.25f) * 4000f, ForceMode.Impulse);
+                enRb.AddTorque(Random.insideUnitSphere * Random.Range(0.75f, 1.25f) * 4500f, ForceMode.Impulse);
+            }
+
+            boomForceSource.Play();
+
+            while(boomCharge < 1f)
+            {
+                boomCharge += Time.deltaTime;
+            }
+
+            yield return new WaitForSeconds(1f);
+
+            forced = false;
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if(other.tag == "Enemy")
+        {
+            if (!enemyCars.Contains(other.gameObject))
+                enemyCars.Add(other.gameObject);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Enemy")
+        {
+            enemyCars.Remove(other.gameObject);
+        }
     }
 
 }
