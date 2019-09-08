@@ -75,6 +75,8 @@ MonoBehaviour:
   - {fileID: 208}
   kbDrive: 0
   nearDeathAnim: {fileID: 204}
+  ExplodyBitsPrefab: {fileID: 8656781025095672460, guid: 1c66519a55fd53b4794d83b1042b6ac1,
+    type: 3}
   driveTorque: 35
   rotDir: 0
 --- !u!136 &206

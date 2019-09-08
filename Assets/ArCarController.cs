@@ -125,12 +125,12 @@ public class ArCarController : MonoBehaviour
 
             if (!currentEnemy && allPlanes.Count > 0 && currentCar && enemySpawn != Vector3.zero)
             {
-                SpawnEnemy();
+                currentEnemy = SpawnEnemy();
             }
         }
     }
 
-    private void SpawnEnemy()
+    private GameObject SpawnEnemy()
     {
         Debug.Log("Attempt Spawn");
 
@@ -142,13 +142,15 @@ public class ArCarController : MonoBehaviour
 
         Quaternion spawnRot = Quaternion.identity;
 
-        currentEnemy = Instantiate(enemyPrefab, spawnPos, spawnRot);
+        GameObject newEnemy = Instantiate(enemyPrefab, spawnPos, spawnRot);
 
-        currentEnemy.GetComponent<EnemyAiCarController>().Init(currentCar.transform);
+        newEnemy.GetComponent<EnemyAiCarController>().Init(currentCar.transform);
 
         Debug.Log("Spawned!!!");
 
         enCt++;
+
+        return newEnemy;
     }
 
     private IEnumerator RandomSpawnGenerator()
@@ -184,9 +186,9 @@ public class ArCarController : MonoBehaviour
         StartCoroutine(SpawnDelayed());
 
         enDeaths++;
-        enCt--;
+        enCt = Mathf.RoundToInt(Mathf.Clamp(enCt - 1, 0f, Mathf.Infinity));
 
-        enDeathCount.text = "Enemys Destroyed: " + enDeaths;
+        enDeathCount.text = "Enemys Destroyed: " + enDeaths + " ct " + enCt;
         enDeathCount.GetComponent<Animator>().SetTrigger("Increment");
     }
 
@@ -202,7 +204,7 @@ public class ArCarController : MonoBehaviour
     {
         yield return new WaitForSeconds(enCt * 2f);
 
-        if(enCt < Mathf.RoundToInt((float) enDeaths / 2f) && enCt < 3f)
+        if (enDeaths % 3f == 0 && enCt < 3) // (enCt < Mathf.RoundToInt((float) enDeaths / 2f) && enCt < 3f)
             SpawnEnemy();
     }
 

@@ -11,6 +11,8 @@ public class CarMotorController : MonoBehaviour
 
     public Animator nearDeathAnim;
 
+    public GameObject ExplodyBitsPrefab;
+
     public float driveTorque = 35f;
     float origTorque;
 
@@ -121,6 +123,23 @@ public class CarMotorController : MonoBehaviour
 
         yield return new WaitForSeconds(2f);
 
+        GameObject explodyBitsInst = Instantiate(ExplodyBitsPrefab, transform.position, transform.rotation, null);
+         
+
+        // Effects
+        foreach (Transform t in explodyBitsInst.transform)
+        {
+            Destroy(t.gameObject, 2.5f);
+
+            Rigidbody chRb = t.GetComponent<Rigidbody>();
+
+            if (chRb)
+            {
+                chRb.AddForce(Random.insideUnitSphere * 7.5f, ForceMode.Impulse);
+                //t.parent = null;                
+            }
+        }
+        
         rb.velocity = Vector3.zero;
         transform.position = positionStart;
         transform.rotation = rotStart;

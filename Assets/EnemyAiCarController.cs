@@ -26,6 +26,7 @@ public class EnemyAiCarController : MonoBehaviour
 
     Coroutine dieCrt = null;
 
+    //s
     void Start()
     {
         origTorque = driveTorque;
@@ -148,9 +149,12 @@ public class EnemyAiCarController : MonoBehaviour
 
         #endregion
     }
+    //
+
 
     private IEnumerator Die(float delay)
     {
+
         Debug.Log("Enemy Dying crt started");
         dying = true;
 
