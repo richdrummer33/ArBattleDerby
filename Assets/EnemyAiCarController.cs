@@ -26,11 +26,14 @@ public class EnemyAiCarController : MonoBehaviour
 
     Coroutine dieCrt = null;
 
+    Rigidbody rb;
+
     //s
     void Start()
     {
         origTorque = driveTorque;
         StartCoroutine(SpawnInvincibility());
+        rb = GetComponent<Rigidbody>();
     }
 
     public void Init(Transform playerTransform)
@@ -138,7 +141,7 @@ public class EnemyAiCarController : MonoBehaviour
         if (!isTouching && !cantDie) // All wheels off the ground (flipped)
         {
             if(!dying)
-                dieCrt = StartCoroutine(Die(2f));
+                dieCrt = StartCoroutine(Die(3f));
         }
         else if(dying)
         {
@@ -148,10 +151,29 @@ public class EnemyAiCarController : MonoBehaviour
             Debug.Log("Enemy stop dying");
         }
 
+        /*
+        if (!rb.useGravity && !zerogDie)
+        {
+            if (dying) // Check, just in case
+            {
+                StopCoroutine(dieCrt);
+            }
+
+            dieCrt = StartCoroutine(Die(4f));
+            zerogDie = true;
+        }
+        else
+        {
+            zerogDie = false;
+        }
+        */
+
         #endregion
     }
     //
     bool cantDie;
+    bool zerogDie;
+
     private IEnumerator SpawnInvincibility()
     {
         cantDie = true;

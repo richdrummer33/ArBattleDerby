@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class CarMotorController : MonoBehaviour
 {
@@ -25,6 +26,7 @@ public class CarMotorController : MonoBehaviour
     public AudioSource boomForceSource;
     float boomCharge;
     public ParticleSystem boomParticle;
+    EnemySucker sucker;
 
     Vector3 positionStart;
     Quaternion rotStart;
@@ -48,6 +50,7 @@ public class CarMotorController : MonoBehaviour
         rotStart = transform.rotation;
         rb = transform.root.GetComponent<Rigidbody>();
         origTorque = driveTorque;
+        sucker = GetComponentInChildren<EnemySucker>();
     }
 
     void OnCollisionEnter(Collision col)
@@ -127,13 +130,20 @@ public class CarMotorController : MonoBehaviour
 
     void Update()
     {
-        if(enemyCars.Count > 1)
+        if (ArCarController.instance)
         {
-            ArCarController.instance.ChargeTheBoom();
+            if (enemyCars.Count > 1)
+            {
+                ArCarController.instance.ChargeTheBoom();
+            }
+            else
+            {
+                ArCarController.instance.DrainTheBoom();
+            }
         }
         else
         {
-            ArCarController.instance.DrainTheBoom();
+            Debug.Log("No ArCarController!!!");
         }
     }
 
@@ -312,10 +322,19 @@ public class CarMotorController : MonoBehaviour
         else
             StopCar();
 
-        if (Input.GetKeyDown(KeyCode.P))
+        if (Input.GetKeyDown(KeyCode.B))
         {
             if (!forced)
                 StartCoroutine(ForceSurroundingEnemies());
+        }
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            SuckEnemies();           
+        }
+        else if (Input.GetKeyUp(KeyCode.L))
+        {
+            UnSuckEnemies();
         }
     }
 
@@ -363,12 +382,24 @@ public class CarMotorController : MonoBehaviour
         }
     }
 
-    private void OnTriggerStay(Collider other)
+    public void SuckEnemies()
+    {
+        sucker.Suck();
+    }
+
+    public void UnSuckEnemies()
+    {
+        sucker.UnSuck();
+        boomForceSource.Play();
+    }
+
+    /*
+    private void OnTriggerEnter(Collider other) // previously "stay"
     {
         if(other.tag == "Enemy")
         {
-            if (!enemyCars.Contains(other.gameObject))
-                enemyCars.Add(other.gameObject);
+            //if (!enemyCars.Contains(other.gameObject))
+            enemyCars.Add(other.gameObject);
         }
     }
 
@@ -379,5 +410,16 @@ public class CarMotorController : MonoBehaviour
             enemyCars.Remove(other.gameObject);
         }
     }
+    */
 
+    public void AddEnemy(GameObject en)
+    {
+        if(!enemyCars.Contains(en))
+            enemyCars.Add(en);
+    }
+
+    public void RemoveEnemy(GameObject en)
+    {
+        enemyCars.Remove(en);
+    }
 }

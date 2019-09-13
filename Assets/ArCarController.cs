@@ -178,6 +178,7 @@ public class ArCarController : MonoBehaviour
                 boomChargeSlider.value = 0f;
                 motor.MakeBoom(boomForceModifier);
                 boomForceModifier = 1f;
+                motor.UnSuckEnemies();
             }
         }
 
@@ -324,7 +325,14 @@ public class ArCarController : MonoBehaviour
     float boomForceModifier = 1f;
     public void ChargeBoom() // Hold fiunger down to charge extra power
     {
-        boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime, 1.33f, 4f);
+        float boomForceModLimit = 4f;
+
+        boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime * 1.33f, 1f, boomForceModLimit);
+
+        if(boomForceModifier / boomForceModLimit > 0.2f)
+        {
+            motor.SuckEnemies();
+        }
 
         boomChargeSlider.GetComponent<Animator>().SetBool("Boom Charged", true);
         boomChargeSlider.GetComponent<Animator>().speed = boomForceModifier / 4f;

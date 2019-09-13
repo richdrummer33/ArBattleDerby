@@ -74,10 +74,8 @@ public class SkidParticleController : MonoBehaviour
 
                     if (skidTimer > 0.5f)
                     {
-                        Debug.Log("newSkidOnTheBlock ??");
                         if (sideSlip > turnSkidMarkThreshold && !gotSkid)
                         {
-                            Debug.Log("newSkidOnTheBlock ");
                             TrailRenderer newSkidOnTheBlock = Instantiate(skidMarkPrefab, wheel.transform.position, skidMarkPrefab.transform.rotation, wheel.transform);
                             wheelToSkid.Add(wheel, newSkidOnTheBlock);
                             allSkidMarks.Add(newSkidOnTheBlock);
@@ -132,7 +130,6 @@ public class SkidParticleController : MonoBehaviour
 
     private IEnumerator FadeDestroySkids(TrailRenderer skidToFade)
     {
-        Debug.Log("START Destroying skid " + skidToFade.name);
         fading = true;
 
         float alphaStep = skidToFade.colorGradient.alphaKeys[0].alpha * 0.05f;
@@ -152,7 +149,6 @@ public class SkidParticleController : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        Debug.Log("FIN Destroying skid " + skidToFade.name);
         allSkidMarks.Remove(skidToFade);
         Destroy(skidToFade.gameObject);
 
