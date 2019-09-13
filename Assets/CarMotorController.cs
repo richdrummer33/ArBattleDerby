@@ -24,6 +24,7 @@ public class CarMotorController : MonoBehaviour
 
     public AudioSource boomForceSource;
     float boomCharge;
+    public ParticleSystem boomParticle;
 
     Vector3 positionStart;
     Quaternion rotStart;
@@ -277,7 +278,8 @@ public class CarMotorController : MonoBehaviour
         rb.AddForce(Random.insideUnitSphere * Random.Range(0.75f, 1.25f) * 500f, ForceMode.Impulse);
         rb.AddTorque(Random.insideUnitSphere * Random.Range(0.75f, 1.25f) * 500f, ForceMode.Impulse);
 
-        boomForceSource.Play();        
+        boomForceSource.Play();
+        boomParticle.Play();
     }
 
     #endregion

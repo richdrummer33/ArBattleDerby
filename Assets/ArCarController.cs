@@ -210,10 +210,10 @@ public class ArCarController : MonoBehaviour
 
     
     private IEnumerator RandomSpawnGenerator()
-    { 
+    {
         while (true)
         {
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.1f); // Just a number
 
             Ray ray = new Ray(Camera.current.transform.position, Random.insideUnitSphere);
 
@@ -263,12 +263,12 @@ public class ArCarController : MonoBehaviour
     {
         if (allEnemyCars.Count < Mathf.RoundToInt((float)enDeaths / 2f) && allEnemyCars.Count < 3f) // (enDeaths % 3f == 0 && enCt < 3)
         {
-            yield return new WaitForSeconds(allEnemyCars.Count * 2f);
+            enCt++;
+            yield return new WaitForSeconds(enCt * 2f);
 
             if (allEnemyCars.Count < 3)
             {
                 SpawnEnemy();
-                enCt++;
             }
         }
     }

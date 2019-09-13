@@ -166,7 +166,8 @@ public class EnemyAiCarController : MonoBehaviour
         
         yield return new WaitForSeconds(delay);
 
-        ArCarController.instance.EnemyDeath(this.gameObject);
+        if (ArCarController.instance)
+            ArCarController.instance.EnemyDeath(this.gameObject);
 
         List<Transform> allChildren = GetAllChildren(transform);
 
