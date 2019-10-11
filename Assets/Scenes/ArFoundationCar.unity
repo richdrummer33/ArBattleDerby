@@ -2192,7 +2192,7 @@ MonoBehaviour:
   boomChargeSlider: {fileID: 1407524620}
   boomPanel: {fileID: 1358229024}
   enDeaths: 0
-  playerLives: 5
+  playerLives: 10
   planeManager: {fileID: 5275377819223793956}
 --- !u!4 &5275377819223793959
 Transform:

@@ -214,7 +214,7 @@ public class ArCarController : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(0.1f); // Just a number
+            yield return new WaitForSeconds(0.025f); // Just a number
 
             Ray ray = new Ray(Camera.current.transform.position, Random.insideUnitSphere);
 
