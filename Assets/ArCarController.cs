@@ -22,6 +22,7 @@ public class ArCarController : MonoBehaviour
     public GameObject boomPanel;
     Animator boomPanelAnim;
     List<GameObject> allEnemyCars = new List<GameObject>();
+    float boomChargeTimer;
 
     GameObject currentEnemy;
 
@@ -34,8 +35,6 @@ public class ArCarController : MonoBehaviour
     private GameObject currentCar;
 
     public ARPlaneManager planeManager;
-
-    Vector3 enemySpawn = Vector3.zero;
 
     ARPlane spawnPlane;
 
@@ -69,6 +68,11 @@ public class ArCarController : MonoBehaviour
 
         if (!ScoreTracker.instance)
             Debug.Log("NO TRACKEr");
+
+        if(boomChargeTimer > 4f)
+            ChargeTheBoom();
+
+        boomChargeTimer += Time.deltaTime;
 
         if (playerLives == 0)
         {
@@ -107,7 +111,7 @@ public class ArCarController : MonoBehaviour
                 }
             }
 
-            if (!currentEnemy && allPlanes.Count > 0 && currentCar && enemySpawn != Vector3.zero)
+            if (!currentEnemy && allPlanes.Count > 0 && currentCar && spawnPoints.Count > 0)
             {
                 currentEnemy = SpawnEnemy();
                 enCt++;
@@ -118,7 +122,11 @@ public class ArCarController : MonoBehaviour
 
     public void StartBoomCharge()
     {
-        ChargeBoom();
+        if (boomChargeSlider.fillAmount > 0.99f)
+        {
+            ChargeBoom();
+            boomChargeTimer = 0f;
+        }
     }
 
     public void EndBoomCharge()
@@ -131,16 +139,28 @@ public class ArCarController : MonoBehaviour
             boomForceModifier = 1f;
             motor.UnSuckEnemies();
         }
+
+        boomChargeTimer = 0f;
+    }
+
+    void OvertimeBoom()
+    {
+        boomPanelAnim.SetTrigger("Make Boom");
+        boomChargeSlider.fillAmount = 0f;
+        boomForceModifier = 1f;
+        motor.UnSuckEnemies();
     }
 
     public void SteerLeft()
     {
         motor.SteerLeft();
+        Debug.Log("steer left");
     }
 
     public void SteerRight()
     {
         motor.SteerRight();
+        Debug.Log("steer right");
     }
 
     public void SteerForward()
@@ -161,13 +181,14 @@ public class ArCarController : MonoBehaviour
     public void ResetWheels()
     {
         motor.ResetWheels();
+        Debug.Log("Reset wheels");
     }
 
     private GameObject SpawnEnemy()
     {
         Debug.Log("Attempt Spawn");
 
-        Vector3 spawnPos = enemySpawn;
+        Vector3 spawnPos = spawnPoints[Mathf.RoundToInt(Random.Range(0, spawnPoints.Count - 1))];
 
         //Vector3 innerDirection = spawnPlane.center - spawnPos; // Vector that points from the extremity to the center of the plane
 
@@ -186,12 +207,13 @@ public class ArCarController : MonoBehaviour
         return newEnemy;
     }
 
-    
+    List<Vector3> spawnPoints = new List<Vector3>();
+
     private IEnumerator RandomSpawnGenerator()
     {
         while (true)
         {
-            yield return new WaitForSeconds(0.025f); // Just a number
+            yield return new WaitForSeconds(0.05f); // Just a number
 
             Ray ray = new Ray(Camera.current.transform.position, Random.insideUnitSphere);
 
@@ -203,7 +225,12 @@ public class ArCarController : MonoBehaviour
 
             if (hits.Count > 0)
             {
-                enemySpawn = hits[0].pose.position;
+                spawnPoints.Add(hits[0].pose.position);
+
+                if (spawnPoints.Count > 20)
+                {
+                    spawnPoints.RemoveAt(0);
+                }
             }
         }
     }
@@ -241,11 +268,11 @@ public class ArCarController : MonoBehaviour
     {
         if (allEnemyCars.Count < Mathf.RoundToInt((float)enDeaths / 2f) && allEnemyCars.Count < 3f) // (enDeaths % 3f == 0 && enCt < 3)
         {
-            enCt++;
-            yield return new WaitForSeconds(enCt * 2f);
-
             if (allEnemyCars.Count < 3)
             {
+                enCt++;
+                yield return new WaitForSeconds(enCt * 2f);
+                
                 SpawnEnemy();
             }
         }
@@ -274,7 +301,7 @@ public class ArCarController : MonoBehaviour
 
     public void ChargeTheBoom() // Filling the NOS, essentially
     {
-        boomChargeSlider.fillAmount = Mathf.Clamp(boomChargeSlider.fillAmount + Time.deltaTime * 0.33f, 0f, 1f);
+        boomChargeSlider.fillAmount = Mathf.Clamp(boomChargeSlider.fillAmount + Time.deltaTime * 0.1f, 0f, 1f);
 
         if (boomChargeSlider.fillAmount > 0.99f)
         {
@@ -289,7 +316,7 @@ public class ArCarController : MonoBehaviour
         }
     }
 
-    public void DrainTheBoom()
+    public void DrainTheBoom() // UNUSED
     {
         if (boomChargeSlider.fillAmount < 0.99f)
         {
@@ -303,11 +330,18 @@ public class ArCarController : MonoBehaviour
     {
         float boomForceModLimit = 4f;
 
-        boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime * 1.33f, 1f, boomForceModLimit);
-
-        if(boomForceModifier / boomForceModLimit > 0.2f)
+        if (boomForceModifier < boomForceModLimit)
         {
-            motor.SuckEnemies();
+            boomForceModifier = Mathf.Clamp(boomForceModifier + Time.deltaTime * 1.33f, 1f, boomForceModLimit);
+
+            if (boomForceModifier / boomForceModLimit > 0.2f)
+            {
+                motor.SuckEnemies();
+            }
+        }
+        else
+        {
+            OvertimeBoom();
         }
     }
 }

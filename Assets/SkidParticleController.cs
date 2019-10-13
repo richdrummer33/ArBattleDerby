@@ -31,8 +31,17 @@ public class SkidParticleController : MonoBehaviour
 
     int ct;
 
+    [SerializeField]
+    AudioSource source;
+
+    Rigidbody rb;
+
+    float pitchModifier;
+
     void Start()
     {
+        rb = transform.root.GetComponent<Rigidbody>();
+
         wheels = GetComponentsInChildren<WheelCollider>().ToList<WheelCollider>();
 
         foreach(WheelCollider wheel in wheels)
@@ -104,16 +113,33 @@ public class SkidParticleController : MonoBehaviour
                     if (sideSlip > sideSkidThreshold || slip > fwdSkidThreshold)
                     {
                         sys.Play();
+
+                        Debug.Log("Velocty for skid check " + rb.velocity.magnitude);
+                        if (rb.velocity.magnitude > 0.5f)
+                        {
+                            pitchModifier = Mathf.Clamp(pitchModifier + Time.deltaTime * 0.1f, 0f, 1f);
+                            
+                            source.pitch = Mathf.Clamp(Mathf.Sqrt(sideSlip - sideSkidThreshold + 0.66f), 0.66f, 1f);
+                            source.volume = Mathf.Clamp(Mathf.Sqrt(sideSlip/(sideSkidThreshold * 20f)) * pitchModifier, 0f, 1f) ;
+                        }
                     }
                     else
                     {
                         sys.Stop();
+
+                        pitchModifier = Mathf.Clamp(pitchModifier - Time.deltaTime, 0.5f, 1f);
+
+                        source.volume = Mathf.Clamp(source.volume * pitchModifier, 0f, 1f);
                     }
                 }
             }
             else
             {
                 sys.Stop();
+
+                pitchModifier = Mathf.Clamp(pitchModifier - Time.deltaTime, 0.5f, 1f);
+
+                source.volume = Mathf.Clamp(source.volume * pitchModifier, 0f, 1f);
 
                 wheelToSkid.Remove(wheel);
 

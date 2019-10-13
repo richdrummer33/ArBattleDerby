@@ -43,7 +43,19 @@ public class CarMotorController : MonoBehaviour
     Coroutine crt;
 
     int ct = 0;
-           
+
+    public bool grounded;
+
+    float motorStrength;
+    float motorRevRate = 0.5f;
+
+    [SerializeField]
+    AudioSource motorSource;
+
+    [SerializeField]
+    float topSpeed = 10f;
+    float speed;
+
     void Start()
     {
         positionStart = transform.position;
@@ -98,6 +110,7 @@ public class CarMotorController : MonoBehaviour
 
         if ((hitL && hitR && hitLb && hitRb))
         {
+            grounded = true;
             nearDeathAnim.SetBool("Near Death", false);
 
             if (crt != null)
@@ -108,8 +121,10 @@ public class CarMotorController : MonoBehaviour
         }
         else if (!hitL && !hitR && !resetting)
         {
-            ct++;
+            grounded = false;
 
+            ct++;
+            
             if (ct > 30)
             {
                 nearDeathAnim.SetBool("Near Death", true);
@@ -134,17 +149,19 @@ public class CarMotorController : MonoBehaviour
         {
             if (enemyCars.Count > 1)
             {
-                ArCarController.instance.ChargeTheBoom();
+                //ArCarController.instance.ChargeTheBoom();
             }
             else
             {
-                ArCarController.instance.DrainTheBoom();
+                //ArCarController.instance.DrainTheBoom();
             }
         }
         else
         {
             Debug.Log("No ArCarController!!!");
         }
+
+        motorSource.pitch = motorRevRate;
     }
 
     private IEnumerator Reset()
@@ -187,27 +204,15 @@ public class CarMotorController : MonoBehaviour
         if (resetting)
         {
             rb.AddTorque(100000f * transform.forward);
-            rb.AddForce(100000f * Vector3.Cross(Vector3.up, transform.forward));
+           // rb.AddForce(100000f * Vector3.Cross(Vector3.up, transform.forward));
         }
         foreach (WheelCollider wheel in wheels)
         {
             //wheel.motorTorque = driveTorque;
             wheel.steerAngle = -45f;
-        }        
-    }
+        }
 
-    public void SteerLeftBackward()
-    {
-        if (resetting)
-        {
-            rb.AddTorque(100000f * transform.forward);
-            rb.AddForce(100000f * Vector3.Cross(Vector3.up, transform.forward));
-        }
-        foreach (WheelCollider wheel in wheels)
-        {
-            //wheel.motorTorque = -driveTorque;
-            wheel.steerAngle = -45f;
-        }
+        Debug.Log("steering left*");
     }
 
     public void SteerRight()
@@ -215,27 +220,15 @@ public class CarMotorController : MonoBehaviour
         if (resetting)
         {
             rb.AddTorque(100000f * -transform.forward);
-            rb.AddForce(100000f * -Vector3.Cross(Vector3.up, transform.forward));
+           // rb.AddForce(100000f * -Vector3.Cross(Vector3.up, transform.forward));
         }
         foreach (WheelCollider wheel in wheels)
         {
             //wheel.motorTorque = driveTorque;
             wheel.steerAngle = 45f;
-        }        
-    }
-
-    public void SteerRightBackward()
-    {
-        if (resetting)
-        {
-            rb.AddTorque(100000f * -transform.forward);
-            rb.AddForce(100000f * -Vector3.Cross(Vector3.up, transform.forward));
         }
-        foreach (WheelCollider wheel in wheels)
-        {
-            //wheel.motorTorque = -driveTorque;
-            wheel.steerAngle = 45f;
-        }
+                
+        Debug.Log("steering right*");
     }
 
     public void SteerStraight(bool flip)
@@ -249,7 +242,9 @@ public class CarMotorController : MonoBehaviour
         {
             wheel.motorTorque = driveTorque * 45f / 35f;
             //wheel.steerAngle = 0f;
-        }        
+        }
+
+        motorRevRate = Mathf.Clamp(motorRevRate + Time.deltaTime * motorRevRate * 2f, 0.5f, 0.9f);
     }
 
     public void SteerBackwards()
@@ -262,6 +257,8 @@ public class CarMotorController : MonoBehaviour
         {
             wheel.motorTorque = -45f;
         }
+
+        motorRevRate = Mathf.Clamp(motorRevRate + Time.deltaTime * motorRevRate * 2f, 0.5f, 0.9f);
     }
 
     public void StopCar()
@@ -270,6 +267,8 @@ public class CarMotorController : MonoBehaviour
         {
             wheel.motorTorque = 0f;
         }
+
+        motorRevRate = Mathf.Clamp(motorRevRate - Time.deltaTime * motorRevRate * 2f, 0.5f, 0.9f);
     }
 
     public void ResetWheels()
@@ -317,8 +316,10 @@ public class CarMotorController : MonoBehaviour
         {
             SteerRight();
         }
+        else
+            ResetWheels();
 
-        else if (Input.GetKey(KeyCode.W)) // Fwd/Back
+        if (Input.GetKey(KeyCode.W)) // Fwd/Back
         {
             SteerStraight(true);
         }
