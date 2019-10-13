@@ -187,11 +187,11 @@ public class CarMotorController : MonoBehaviour
         if (resetting)
         {
             rb.AddTorque(100000f * transform.forward);
-            //rb.AddForce(100000f * Vector3.Cross(Vector3.up, transform.forward));
+            rb.AddForce(100000f * Vector3.Cross(Vector3.up, transform.forward));
         }
         foreach (WheelCollider wheel in wheels)
         {
-            wheel.motorTorque = driveTorque;
+            //wheel.motorTorque = driveTorque;
             wheel.steerAngle = -45f;
         }        
     }
@@ -201,11 +201,11 @@ public class CarMotorController : MonoBehaviour
         if (resetting)
         {
             rb.AddTorque(100000f * transform.forward);
-            //rb.AddForce(100000f * Vector3.Cross(Vector3.up, transform.forward));
+            rb.AddForce(100000f * Vector3.Cross(Vector3.up, transform.forward));
         }
         foreach (WheelCollider wheel in wheels)
         {
-            wheel.motorTorque = -driveTorque;
+            //wheel.motorTorque = -driveTorque;
             wheel.steerAngle = -45f;
         }
     }
@@ -215,11 +215,11 @@ public class CarMotorController : MonoBehaviour
         if (resetting)
         {
             rb.AddTorque(100000f * -transform.forward);
-            //rb.AddForce(100000f * -Vec1tor3.Cross(Vector3.up, transform.forward));
+            rb.AddForce(100000f * -Vector3.Cross(Vector3.up, transform.forward));
         }
         foreach (WheelCollider wheel in wheels)
         {
-            wheel.motorTorque = driveTorque;
+            //wheel.motorTorque = driveTorque;
             wheel.steerAngle = 45f;
         }        
     }
@@ -229,11 +229,11 @@ public class CarMotorController : MonoBehaviour
         if (resetting)
         {
             rb.AddTorque(100000f * -transform.forward);
-            //rb.AddForce(100000f * -Vector3.Cross(Vector3.up, transform.forward));
+            rb.AddForce(100000f * -Vector3.Cross(Vector3.up, transform.forward));
         }
         foreach (WheelCollider wheel in wheels)
         {
-            wheel.motorTorque = -driveTorque;
+            //wheel.motorTorque = -driveTorque;
             wheel.steerAngle = 45f;
         }
     }
@@ -248,7 +248,7 @@ public class CarMotorController : MonoBehaviour
         foreach (WheelCollider wheel in wheels)
         {
             wheel.motorTorque = driveTorque * 45f / 35f;
-            wheel.steerAngle = 0f;
+            //wheel.steerAngle = 0f;
         }        
     }
 
@@ -269,6 +269,13 @@ public class CarMotorController : MonoBehaviour
         foreach (WheelCollider wheel in wheels)
         {
             wheel.motorTorque = 0f;
+        }
+    }
+
+    public void ResetWheels()
+    {
+        foreach (WheelCollider wheel in wheels)
+        {
             wheel.steerAngle = 0f;
         }
     }
