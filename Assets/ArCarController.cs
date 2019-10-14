@@ -25,6 +25,7 @@ public class ArCarController : MonoBehaviour
     float boomChargeTimer;
 
     GameObject currentEnemy;
+    public List<GameObject> enemies;
 
     int enCt;
     public int enDeaths;
@@ -165,7 +166,7 @@ public class ArCarController : MonoBehaviour
 
     public void SteerForward()
     {
-        motor.SteerStraight(false);
+        motor.SteerStraight(true);
     }
 
     public void SteerBack()
@@ -203,6 +204,8 @@ public class ArCarController : MonoBehaviour
         Debug.Log("Spawned!!!");
 
         allEnemyCars.Add(newEnemy);
+
+        enemies.Add(newEnemy);
 
         return newEnemy;
     }
@@ -249,6 +252,7 @@ public class ArCarController : MonoBehaviour
         enDeaths++;
         enCt--; // = Mathf.RoundToInt(Mathf.Clamp(enCt - 1, 0f, Mathf.Infinity));
         allEnemyCars.Remove(deadCar);
+        enemies.Remove(deadCar);
 
         StartCoroutine(SpawnDelayed());
         

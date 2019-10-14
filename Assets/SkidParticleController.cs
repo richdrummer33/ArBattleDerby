@@ -114,7 +114,6 @@ public class SkidParticleController : MonoBehaviour
                     {
                         sys.Play();
 
-                        Debug.Log("Velocty for skid check " + rb.velocity.magnitude);
                         if (rb.velocity.magnitude > 0.5f)
                         {
                             pitchModifier = Mathf.Clamp(pitchModifier + Time.deltaTime * 0.1f, 0f, 1f);

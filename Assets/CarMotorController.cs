@@ -244,7 +244,7 @@ public class CarMotorController : MonoBehaviour
             //wheel.steerAngle = 0f;
         }
 
-        motorRevRate = Mathf.Clamp(motorRevRate + Time.deltaTime * motorRevRate * 2f, 0.5f, 0.9f);
+        motorRevRate = Mathf.Clamp(motorRevRate + Time.deltaTime * 0.75f, 0.5f, 0.9f);
     }
 
     public void SteerBackwards()
@@ -258,7 +258,7 @@ public class CarMotorController : MonoBehaviour
             wheel.motorTorque = -45f;
         }
 
-        motorRevRate = Mathf.Clamp(motorRevRate + Time.deltaTime * motorRevRate * 2f, 0.5f, 0.9f);
+        motorRevRate = Mathf.Clamp(motorRevRate + Time.deltaTime * 0.75f, 0.5f, 0.9f);
     }
 
     public void StopCar()
@@ -268,7 +268,7 @@ public class CarMotorController : MonoBehaviour
             wheel.motorTorque = 0f;
         }
 
-        motorRevRate = Mathf.Clamp(motorRevRate - Time.deltaTime * motorRevRate * 2f, 0.5f, 0.9f);
+        motorRevRate = Mathf.Clamp(motorRevRate - Time.deltaTime, 0.5f, 0.9f);
     }
 
     public void ResetWheels()

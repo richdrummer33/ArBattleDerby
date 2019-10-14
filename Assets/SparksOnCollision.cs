@@ -31,7 +31,6 @@ public class SparksOnCollision : MonoBehaviour
             }
 
             float force = other.relativeVelocity.magnitude;
-            Debug.Log("rel vel " + force);
 
             crashSource.pitch  = Mathf.Clamp(force * 1.25f, 0.75f, 1.75f);
             crashSource.volume = Mathf.Clamp(force, 0.5f, 1.5f);

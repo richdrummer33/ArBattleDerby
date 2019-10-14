@@ -28,6 +28,9 @@ public class EnemyAiCarController : MonoBehaviour
 
     Rigidbody rb;
 
+    [SerializeField]
+    float aggressionModifier = 1f;
+
     //s
     void Start()
     {
@@ -218,7 +221,7 @@ public class EnemyAiCarController : MonoBehaviour
         Debug.Log("CollideBehavior");
         colliding = true;
 
-        yield return new WaitForSeconds(Random.Range(0.33f, 1f));
+        yield return new WaitForSeconds(Random.Range(0.33f * aggressionModifier, 1f * aggressionModifier));
 
         colliding = false;
     }
