@@ -35,11 +35,15 @@ public class CarMissileController : MonoBehaviour
     {
         GameObject missile = Instantiate(missilePrefab, launchTubes[currentTube].position + transform.up * 0.1f, Quaternion.LookRotation(launchTubes[currentTube].up), null);
 
-        int randIndex = Mathf.RoundToInt(Random.Range(0f, enemiesInRange.Count - 1f));
+        Transform target = null;
 
-        Transform target = enemiesInRange[randIndex];
+        if (enemiesInRange.Count > 0)
+        {
+            int randIndex = Mathf.RoundToInt(Random.Range(0f, enemiesInRange.Count - 1f));
 
-        Debug.Log("carRb.velocity " + carRb.velocity);
+            target = enemiesInRange[randIndex];
+        }
+
         missile.GetComponent<MissileController>().SetTarget(target, carRb.velocity);
 
         currentTube = (currentTube + 1) % launchTubes.Count;
