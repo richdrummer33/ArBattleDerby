@@ -303,6 +303,15 @@ public class ArCarController : MonoBehaviour
         SceneManager.LoadScene(0);
     }
 
+    CarMissileController missileLauncher;
+    public void LaunchMissile()
+    {
+        if (!missileLauncher)
+            missileLauncher = motor.GetComponentInChildren<CarMissileController>();
+
+        missileLauncher.LaunchMissile();
+    }
+
     public void ChargeTheBoom() // Filling the NOS, essentially
     {
         boomChargeSlider.fillAmount = Mathf.Clamp(boomChargeSlider.fillAmount + Time.deltaTime * 0.1f, 0f, 1f);

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyAiCarController : MonoBehaviour
+public class EnemyAiCarController : MonoBehaviour//
 {
     public List<WheelCollider> wheels = new List<WheelCollider>();
     public List<Transform> boundarySensorsFront;
@@ -28,10 +28,9 @@ public class EnemyAiCarController : MonoBehaviour
 
     Rigidbody rb;
 
-    [SerializeField]
-    float aggressionModifier = 1f;
+    [Range(1f, 4f)]
+    public float aggressionModifier = 1f;
 
-    //s
     void Start()
     {
         origTorque = driveTorque;
@@ -44,10 +43,18 @@ public class EnemyAiCarController : MonoBehaviour
         this.playerTransform = playerTransform;
     }
 
+    float pushTime;
     private void OnTriggerEnter(Collider other)
-    {        
-        if ((other.tag == "Player" || other.tag == "Enemy") && Random.Range(0f,1f) > 0.66f)
+    {
+        float rand = Random.Range(0f, 1f);
+
+        if (other.tag == "Enemy" && rand > 0.66f)
         {
+            StartCoroutine(CollideBehavior());
+        }
+        else if(other.transform.tag == "Player" && rand > 0.66f + (aggressionModifier - 1f) / 4f * 0.33f)
+        {
+            pushTime = Random.Range(0.5f, Mathf.Sqrt(1f + aggressionModifier));
             StartCoroutine(CollideBehavior());
         }
     }
@@ -63,7 +70,7 @@ public class EnemyAiCarController : MonoBehaviour
                 driveTorque = origTorque * 0.75f;
                 collisionTimer = 0f;
 
-                if(Random.Range(0f, 1f) > 0.66f)
+                if(collisionTimer > pushTime)
                 {
                     StartCoroutine(CollideBehavior());
                 }
@@ -144,9 +151,9 @@ public class EnemyAiCarController : MonoBehaviour
         if (!isTouching && !cantDie) // All wheels off the ground (flipped)
         {
             if(!dying)
-                dieCrt = StartCoroutine(Die(3f));
+                dieCrt = StartCoroutine(Die(3f, 0.5f));
         }
-        else if(dying)
+        else if(dying && dieCrt != null)
         {
             StopCoroutine(dieCrt);
             dieCrt = null;
@@ -183,8 +190,14 @@ public class EnemyAiCarController : MonoBehaviour
         yield return new WaitForSeconds(2f);
         cantDie = false;
     }
+    
+    public void Explode()
+    {
+        cantDie = true; // Prevent double call
+        StartCoroutine(Die(0f, 2.5f));
+    }
 
-    private IEnumerator Die(float delay)
+    private IEnumerator Die(float delay, float forceMod)
     {
         Debug.Log("Enemy Dying crt started");
         dying = true;
@@ -209,7 +222,7 @@ public class EnemyAiCarController : MonoBehaviour
                 chRb = t.gameObject.AddComponent<Rigidbody>();
             }
 
-            chRb.AddForce(Random.insideUnitSphere * 0.5f, ForceMode.Impulse);
+            chRb.AddForce(Random.insideUnitSphere * forceMod, ForceMode.Impulse);
             
             Destroy(t.gameObject, 2.5f);
             t.parent = null;
@@ -221,7 +234,7 @@ public class EnemyAiCarController : MonoBehaviour
         Debug.Log("CollideBehavior");
         colliding = true;
 
-        yield return new WaitForSeconds(Random.Range(0.33f * aggressionModifier, 1f * aggressionModifier));
+        yield return new WaitForSeconds(Random.Range(0.33f, 1f / Mathf.Sqrt(aggressionModifier)));
 
         colliding = false;
     }
