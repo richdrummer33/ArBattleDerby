@@ -48,7 +48,8 @@ public class SkidParticleController : MonoBehaviour
         {
             wheelToParticle.Add(wheel, wheel.transform.GetComponentInChildren<ParticleSystem>());
         }
-        
+
+        ObjectPool.CreatePool(skidMarkPrefab, 20);
     }
 
     float skidTimer;
@@ -100,11 +101,7 @@ public class SkidParticleController : MonoBehaviour
 
                         if(allSkidMarks.Count > maxSkids && !fading) // Don't hog resources
                         {
-                            StartCoroutine(FadeDestroySkids(allSkidMarks[0]));
-
-                            // TrailRenderer oldSkid = allSkidMarks[0];
-                            // allSkidMarks.Remove(oldSkid);
-                            // Destroy(oldSkid.gameObject);                            
+                            StartCoroutine(FadeDestroySkids(allSkidMarks[0])); // TrailRenderer oldSkid = allSkidMarks[0 // allSkidMarks.Remove(oldSkid); // Destroy(oldSkid.gameObject);                            
                         }
 
                         skidTimer = 0f;

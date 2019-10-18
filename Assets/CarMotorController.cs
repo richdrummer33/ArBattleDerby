@@ -63,6 +63,8 @@ public class CarMotorController : MonoBehaviour
         rb = transform.root.GetComponent<Rigidbody>();
         origTorque = driveTorque;
         sucker = GetComponentInChildren<EnemySucker>();
+
+        ObjectPool.CreatePool(ExplodyBitsPrefab, 1);
     }
 
     void OnCollisionEnter(Collision col)
@@ -170,8 +172,7 @@ public class CarMotorController : MonoBehaviour
 
         yield return new WaitForSeconds(2f);
 
-        GameObject explodyBitsInst = Instantiate(ExplodyBitsPrefab, transform.position, transform.rotation, null);
-         
+        GameObject explodyBitsInst = ObjectPool.Spawn(ExplodyBitsPrefab, transform.position, transform.rotation); // Instantiate(ExplodyBitsPrefab, transform.position, transform.rotation, null);
 
         // Effects
         foreach (Transform t in explodyBitsInst.transform)

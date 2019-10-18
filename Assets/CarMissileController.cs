@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Launcher
-public class CarMissileController : MonoBehaviour 
+public class CarMissileController : WeaponController
 {
     [SerializeField]
     GameObject missilePrefab;
@@ -21,6 +21,8 @@ public class CarMissileController : MonoBehaviour
     private void Start()
     {
         carRb = transform.root.GetComponent<Rigidbody>();
+
+        ObjectPool.CreatePool(missilePrefab, 10);
     }
 
     private void Update()
@@ -33,20 +35,30 @@ public class CarMissileController : MonoBehaviour
 
     public void LaunchMissile()
     {
-        GameObject missile = Instantiate(missilePrefab, launchTubes[currentTube].position, Quaternion.LookRotation(launchTubes[currentTube].up), null);
+        if (ammoCount > 0)
+        { 
+            GameObject missile = ObjectPool.Spawn(missilePrefab, launchTubes[currentTube].position, Quaternion.LookRotation(launchTubes[currentTube].up)); // Instantiate(missilePrefab, launchTubes[currentTube].position, Quaternion.LookRotation(launchTubes[currentTube].up), null);
 
-        Transform target = null;
+            Transform target = null;
 
-        if (enemiesInRange.Count > 0)
-        {
-            int randIndex = Mathf.RoundToInt(Random.Range(0f, enemiesInRange.Count - 1f));
+            if (enemiesInRange.Count > 0)
+            {
+                int randIndex = Mathf.RoundToInt(Random.Range(0f, enemiesInRange.Count - 1f));
 
-            target = enemiesInRange[randIndex];
+                target = enemiesInRange[randIndex];
+            }
+
+            missile.GetComponent<MissileController>().SetTarget(target, carRb.velocity + (carRb.transform.forward + carRb.transform.up * 0.15f) * 0.5f);
+
+            currentTube = (currentTube + 1) % launchTubes.Count;
+
+            ammoCount--;
         }
+    }
 
-        missile.GetComponent<MissileController>().SetTarget(target, carRb.velocity + (carRb.transform.forward + carRb.transform.up * 0.5f) * 0.25f);
-
-        currentTube = (currentTube + 1) % launchTubes.Count;
+    public override void PickupAmmo(int quantity)
+    {
+        base.PickupAmmo(quantity);
     }
 
     private void OnTriggerEnter(Collider other)

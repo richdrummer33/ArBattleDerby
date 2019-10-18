@@ -25,7 +25,7 @@ public class MissileController : MonoBehaviour
     [SerializeField]
     List<ParticleSystem> explodeFx = new List<ParticleSystem>();
 
-    float maxLifetime = 8f;
+    float maxLifetime = 5f;
 
     private void Start()
     {
@@ -69,8 +69,8 @@ public class MissileController : MonoBehaviour
         {
             targetPos = target.position;
 
-            if (lifetime > maxLifetime * 0.2f)
-                targetPos += Vector3.up * 0.2f; // Makes the missile go crazy when it passes thru target pos without exploding HAHAHA
+            if (lifetime > maxLifetime * 0.5f)
+                targetPos += Vector3.up * 0.2f + Random.insideUnitSphere * 0.2f; // Makes the missile go crazy when it passes thru target pos without exploding HAHAHA
         }
         else
         {
@@ -79,36 +79,38 @@ public class MissileController : MonoBehaviour
 
         lifetime += Time.deltaTime;
 
-        speed = Mathf.Clamp(speed + Mathf.Pow(lifetime, 2f) * Time.deltaTime, 0f, cruiseSpeed);
+        speed = Mathf.Clamp(speed + Mathf.Pow(lifetime, 2f) * Time.deltaTime, 0.5f, cruiseSpeed);
 
         transform.position += (transform.forward * speed + _initialVelocity * 1.5f / (lifetime + 1f)) * Time.deltaTime;
 
         Vector3 lookDir = targetPos - transform.position;
 
-        Quaternion aimRotation = Quaternion.LookRotation(lookDir);
+        if (lifetime > 0.33f)
+        {
+            Quaternion aimRotation = Quaternion.LookRotation(lookDir);
 
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, aimRotation, 90f * Time.deltaTime);
-
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, aimRotation, 110f * Time.deltaTime);
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.tag != "Player")
-        { 
+        if (collision.gameObject.tag != "Player")
+        {
             foreach (Rigidbody rb in missileSense.inRangeRbs)
             {
                 //Debug.Log("explodeSphere.radius " + explodeSphere.radius);
                 //Debug.Log("Vector3.Distance(rb.transform.position, transform.position) " + Vector3.Distance(rb.transform.position, transform.position));
 
-                float distNorm = Mathf.Clamp(Mathf.Pow((explodeSphere.radius - Vector3.Distance(rb.transform.position, transform.position)), 1.25f) / explodeSphere.radius, 0.01f, 1f);
+                float distNorm = Mathf.Clamp(Mathf.Pow((explodeSphere.radius - Vector3.Distance(rb.transform.position, transform.position)), 1.66f) / explodeSphere.radius, 0.01f, 1f);
 
                 EnemyAiCarController enemy = rb.gameObject.GetComponent<EnemyAiCarController>();
 
-                if(rb.transform == collision.transform)
+                if (rb.transform == collision.transform)
                 {
                     enemy.Explode();
                 }
-                else if(rb.gameObject.tag == "Player")
+                else if (rb.gameObject.tag == "Player")
                 {
                     distNorm = distNorm / 3f;
                 }
@@ -117,41 +119,27 @@ public class MissileController : MonoBehaviour
 
                 Vector3 forceDir = (rb.transform.position - transform.position + Vector3.up).normalized;
 
-                rb.AddForce(forceDir * 5000f * explosionForce * distNorm, ForceMode.Impulse);
+                rb.AddForce(forceDir * 3000f * explosionForce * distNorm, ForceMode.Impulse);
                 rb.AddTorque(Random.insideUnitSphere * Mathf.RoundToInt(Random.Range(-1f, 1f)) * 400f * explosionForce * distNorm, ForceMode.Impulse);
-            }           
+            }
 
-            foreach(ParticleSystem sys in explodeFx)
+            foreach (ParticleSystem sys in explodeFx)
             {
                 sys.transform.parent = null;
                 sys.transform.rotation = Quaternion.LookRotation(Vector3.up);
-                Destroy(sys.gameObject, sys.main.startLifetime.constant);
+                StartCoroutine(RecycleDelayed(sys.gameObject, sys.main.startLifetime.constant)); // Destroy(sys.gameObject, sys.main.startLifetime.constant);
                 sys.Play();
             }
 
             smokeFx.transform.parent = null; // Smoke trail
             smokeFx.Stop();
-            Destroy(smokeFx.gameObject, smokeFx.main.startLifetime.constantMax);
-
-            Destroy(this.gameObject);
         }
-    }
 
-    /*
-    private void OnTriggerEnter(Collider other)
-    {
-        if(other.tag == "Enemy" || other.tag == "Player")
+        IEnumerator RecycleDelayed(GameObject obj, float delay)
         {
-            missileSense.inRangeRbs.Add(other.transform.root.GetComponentInChildren<Rigidbody>());
-        }
-    }
+            yield return new WaitForSeconds(delay);
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.tag == "Enemy" || other.tag == "Player")
-        {
-            missileSense.inRangeRbs.Remove(other.transform.root.GetComponentInChildren<Rigidbody>());
+            ObjectPool.Recycle(obj);
         }
     }
-    */
 }

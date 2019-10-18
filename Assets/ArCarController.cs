@@ -12,8 +12,10 @@ public class ArCarController : MonoBehaviour
 
     public GameObject carPrefab;
 
-    public GameObject enemyPrefab;
+    public List<GameObject> enemyPrefabs;
     
+    public GameObject missilePickupItemPrefab;
+
     public Text frLifeCt;
     public Text enDeathCount;
     public Text gameOver;
@@ -56,6 +58,8 @@ public class ArCarController : MonoBehaviour
         boomChargeSlider.fillAmount = 0f; 
         boomPanel.GetComponent<Animator>().SetBool("Boom Charged", false);
         boomPanelAnim = boomPanel.GetComponent<Animator>();
+
+        StartCoroutine(RandomItemSpawner(missilePickupItemPrefab, 15f, 5f));
     }
 
     void OnDisable()
@@ -197,7 +201,9 @@ public class ArCarController : MonoBehaviour
 
         Quaternion spawnRot = Quaternion.identity;
 
-        GameObject newEnemy = Instantiate(enemyPrefab, spawnPos, spawnRot);
+        int enemySpawnIndex = (int)Mathf.Clamp(Mathf.CeilToInt((float)enDeaths / 10f) - 1, 0f, enemyPrefabs.Count - 1f);
+
+        GameObject newEnemy = Instantiate(enemyPrefabs[enemySpawnIndex], spawnPos, spawnRot);
 
         newEnemy.GetComponent<EnemyAiCarController>().Init(currentCar.transform);
 
@@ -234,6 +240,21 @@ public class ArCarController : MonoBehaviour
                 {
                     spawnPoints.RemoveAt(0);
                 }
+            }
+        }
+    }
+
+    private IEnumerator RandomItemSpawner(GameObject itemPrefab, float interval, float randomRange)
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(interval + Random.Range(-interval, interval)); // Just a number
+
+            if (spawnPoints.Count > 0)
+            {
+                Vector3 spawnPos = spawnPoints[Mathf.RoundToInt(Random.Range(0, spawnPoints.Count - 1))];
+
+                Instantiate(itemPrefab, spawnPos + Vector3.up * 0.2f, itemPrefab.transform.rotation);
             }
         }
     }

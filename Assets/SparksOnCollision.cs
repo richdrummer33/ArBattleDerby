@@ -9,12 +9,17 @@ public class SparksOnCollision : MonoBehaviour
     [SerializeField]
     AudioSource crashSource;
 
+    void Start()
+    {
+        ObjectPool.CreatePool(sparkInst, 5);
+    }
+
     void OnCollisionEnter(Collision other)
     {
         Debug.Log("ASDASD HITT");
 
         if (!sparkInst)
-            sparkInst = Instantiate(sparkPrefab);
+            sparkInst = ObjectPool.Spawn(sparkPrefab); // Instantiate(sparkPrefab);
 
         if (other.transform.tag == "Enemy")
         {
@@ -26,7 +31,7 @@ public class SparksOnCollision : MonoBehaviour
             }
             else
             {
-                ParticleSystem tempParticle = Instantiate(sparkPrefab, other.GetContact(0).point, Quaternion.LookRotation(other.GetContact(0).normal));
+                ParticleSystem tempParticle = ObjectPool.Spawn(sparkPrefab, other.GetContact(0).point, Quaternion.LookRotation(other.GetContact(0).normal)); // Instantiate(sparkPrefab, other.GetContact(0).point, Quaternion.LookRotation(other.GetContact(0).normal));
                 Destroy(tempParticle.gameObject, tempParticle.main.duration + 0.25f);
             }
 
