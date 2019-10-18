@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: AR Battle Derby V2
+  productName: AR Battle Derby V3
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.5647059, g: 0.5512611, b: 0.53333336, a: 1}
@@ -165,7 +165,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Android: com.richdevspace.ArBattleDerbyTest
+    Android: com.richdevspace.ArBattleDerbyTest2
   buildNumber: {}
   AndroidBundleVersionCode: 7
   AndroidMinSdkVersion: 24

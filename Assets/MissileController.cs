@@ -12,9 +12,8 @@ public class MissileController : MonoBehaviour
     float cruiseSpeed = 3f;
     float speed;
     public SphereCollider explodeSphere;
-
-    [SerializeField]
-    List<Rigidbody> inRangeRbs = new List<Rigidbody>();
+    
+    MissileSense missileSense;
 
     bool physMotion = false;
     Vector3 _initialVelocity = Vector3.zero;
@@ -26,17 +25,33 @@ public class MissileController : MonoBehaviour
     [SerializeField]
     List<ParticleSystem> explodeFx = new List<ParticleSystem>();
 
+    float maxLifetime = 8f;
+
     private void Start()
     {
+        missileSense = GetComponentInChildren<MissileSense>();
+
         noTargetDestination = transform.position + Random.insideUnitSphere * 1000f;
+        noTargetDestination.y = Mathf.Clamp(noTargetDestination.y, transform.position.y, Mathf.Infinity);
 
         Rigidbody carRb = transform.root.GetComponent<Rigidbody>();
-        if (inRangeRbs.Contains(carRb))
+        if (missileSense.inRangeRbs.Contains(carRb))
         {
-            inRangeRbs.Add(carRb);
+            missileSense.inRangeRbs.Add(carRb);
         }
 
-        Destroy(this.gameObject, 8f);
+        StartCoroutine(DestroyDelayed(maxLifetime));
+    }
+
+    IEnumerator DestroyDelayed(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        smokeFx.transform.parent = null; // Smoke trail
+        smokeFx.Stop();
+        Destroy(smokeFx.gameObject, smokeFx.main.startLifetime.constantMax);
+
+        Destroy(this.gameObject);
     }
 
     public void SetTarget(Transform enemyTarget, Vector3 initialVelocity)
@@ -53,6 +68,9 @@ public class MissileController : MonoBehaviour
         if (target)
         {
             targetPos = target.position;
+
+            if (lifetime > maxLifetime * 0.2f)
+                targetPos += Vector3.up * 0.2f; // Makes the missile go crazy when it passes thru target pos without exploding HAHAHA
         }
         else
         {
@@ -77,16 +95,25 @@ public class MissileController : MonoBehaviour
     {
         if(collision.gameObject.tag != "Player")
         { 
-            foreach (Rigidbody rb in inRangeRbs)
+            foreach (Rigidbody rb in missileSense.inRangeRbs)
             {
-                float distNorm = Mathf.Clamp(Mathf.Pow((explodeSphere.radius - Vector3.Distance(rb.transform.position, transform.position)), 1.25f) / explodeSphere.radius, 0f, 1f);
+                //Debug.Log("explodeSphere.radius " + explodeSphere.radius);
+                //Debug.Log("Vector3.Distance(rb.transform.position, transform.position) " + Vector3.Distance(rb.transform.position, transform.position));
 
-                if(rb.gameObject.tag == "Player")
+                float distNorm = Mathf.Clamp(Mathf.Pow((explodeSphere.radius - Vector3.Distance(rb.transform.position, transform.position)), 1.25f) / explodeSphere.radius, 0.01f, 1f);
+
+                EnemyAiCarController enemy = rb.gameObject.GetComponent<EnemyAiCarController>();
+
+                if(rb.transform == collision.transform)
                 {
-                    distNorm /= 3f;
+                    enemy.Explode();
+                }
+                else if(rb.gameObject.tag == "Player")
+                {
+                    distNorm = distNorm / 3f;
                 }
 
-                Debug.Log("distNorm "  + distNorm);
+                //Debug.Log("distNorm "  + distNorm);
 
                 Vector3 forceDir = (rb.transform.position - transform.position + Vector3.up).normalized;
 
@@ -110,11 +137,12 @@ public class MissileController : MonoBehaviour
         }
     }
 
+    /*
     private void OnTriggerEnter(Collider other)
     {
         if(other.tag == "Enemy" || other.tag == "Player")
         {
-            inRangeRbs.Add(other.transform.root.GetComponentInChildren<Rigidbody>());
+            missileSense.inRangeRbs.Add(other.transform.root.GetComponentInChildren<Rigidbody>());
         }
     }
 
@@ -122,7 +150,8 @@ public class MissileController : MonoBehaviour
     {
         if (other.tag == "Enemy" || other.tag == "Player")
         {
-            inRangeRbs.Remove(other.transform.root.GetComponentInChildren<Rigidbody>());
+            missileSense.inRangeRbs.Remove(other.transform.root.GetComponentInChildren<Rigidbody>());
         }
     }
+    */
 }

@@ -33,7 +33,7 @@ public class CarMissileController : MonoBehaviour
 
     public void LaunchMissile()
     {
-        GameObject missile = Instantiate(missilePrefab, launchTubes[currentTube].position + transform.up * 0.1f, Quaternion.LookRotation(launchTubes[currentTube].up), null);
+        GameObject missile = Instantiate(missilePrefab, launchTubes[currentTube].position, Quaternion.LookRotation(launchTubes[currentTube].up), null);
 
         Transform target = null;
 
@@ -44,7 +44,7 @@ public class CarMissileController : MonoBehaviour
             target = enemiesInRange[randIndex];
         }
 
-        missile.GetComponent<MissileController>().SetTarget(target, carRb.velocity);
+        missile.GetComponent<MissileController>().SetTarget(target, carRb.velocity + (carRb.transform.forward + carRb.transform.up * 0.5f) * 0.25f);
 
         currentTube = (currentTube + 1) % launchTubes.Count;
     }

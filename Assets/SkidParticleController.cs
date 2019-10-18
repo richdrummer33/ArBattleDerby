@@ -124,7 +124,7 @@ public class SkidParticleController : MonoBehaviour
                     }
                     else
                     {
-                        sys.Stop();
+                            sys.Stop();
 
                         pitchModifier = Mathf.Clamp(pitchModifier - Time.deltaTime, 0.5f, 1f);
 
@@ -134,7 +134,7 @@ public class SkidParticleController : MonoBehaviour
             }
             else
             {
-                sys.Stop();
+                    sys.Stop();
 
                 pitchModifier = Mathf.Clamp(pitchModifier - Time.deltaTime, 0.5f, 1f);
 
